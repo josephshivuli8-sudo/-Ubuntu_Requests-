@@ -1,0 +1,60 @@
+ import os
+import requests
+from urllib.parse import urlparse
+
+def fetch_image():
+    """
+    Prompts the user for a URL, downloads the image, and saves it.
+    """
+    print("Welcome to the Ubuntu-Inspired Image Fetcher!")
+    print("In the spirit of 'I am because we are,' we'll connect to the community to fetch an image.")
+    
+    url = input("\nPlease enter the URL of the image you wish to fetch: ").strip()
+    
+    # Check if the URL is empty
+    if not url:
+        print("❌ Error: The URL cannot be empty. Please try again.")
+        return
+
+    # Create the directory if it doesn't exist
+    directory_name = "Fetched_Images"
+    try:
+        os.makedirs(directory_name, exist_ok=True)
+        print(f"✅ Directory '{directory_name}' ensured.")
+    except OSError as e:
+        print(f"❌ Error creating directory '{directory_name}': {e}")
+        return
+
+    # Extract the filename from the URL
+    parsed_url = urlparse(url)
+    filename = os.path.basename(parsed_url.path)
+    
+    # If the filename is not available, generate a default one
+    if not filename or '.' not in filename:
+        filename = "downloaded_image.jpg"
+        print("⚠️ Warning: Could not determine filename from URL. Using a default name.")
+
+    file_path = os.path.join(directory_name, filename)
+
+    # Download the image using requests
+    try:
+        print(f"⏳ Attempting to fetch image from: {url}")
+        response = requests.get(url, stream=True, timeout=10)
+        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+
+        # Save the image in binary mode
+        with open(file_path, 'wb') as file:
+            for chunk in response.iter_content(chunk_size=8192):
+                file.write(chunk)
+        
+        print(f"🎉 Success! Image saved to '{file_path}'")
+        print("\nThank you for using the Ubuntu Image Fetcher!")
+
+    except requests.exceptions.RequestException as e:
+        print(f"❌ An error occurred while fetching the image: {e}")
+        print("Respectfully, we were unable to complete this connection. Please check the URL and your network.")
+    except Exception as e:
+        print(f"❌ An unexpected error occurred: {e}")
+        
+if __name__ == "__main__":
+    fetch_image()
